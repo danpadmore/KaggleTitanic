@@ -1,9 +1,10 @@
-﻿using static System.Console;
-using System;
-using System.Linq;
-using Microsoft.ML;
+﻿using Microsoft.ML;
 using Microsoft.ML.Data;
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using static System.Console;
 
 namespace KaggleTitanic
 {
@@ -29,15 +30,13 @@ namespace KaggleTitanic
                 var predictionPipeline = mlContext.Model.Load(TrainedModelFilePath, out DataViewSchema predictionPipelineSchema);
 
                 var predictions = predictionPipeline.Transform(data);
-                var survivalPredictions = mlContext.Data.CreateEnumerable<SurvivalPrediction>(predictions, reuseRowObject: false);
+                var survivalPredictions = mlContext.Data.CreateEnumerable<SurvivalPrediction>(predictions, reuseRowObject: true);
 
                 survivalPredictions.ToList().ForEach(p => WriteLine(p));
 
-                //var scoreColumn = predictions.GetColumn<float>("Score").ToArray();
-
-                //WriteLine(predictions.Preview());
-                //WriteLine(predictions.Schema.ToString());
-                //scoreColumn.ToList().ForEach(s => WriteLine(s));
+                File.WriteAllLines("submission.csv", 
+                    new List<string> {  "PassengerId,Survived" }
+                    .Concat(survivalPredictions.Select(p => $"{p.PassengerId},{(p.Survived ? 1 : 0)}")));
             }
             catch (Exception ex)
             {
