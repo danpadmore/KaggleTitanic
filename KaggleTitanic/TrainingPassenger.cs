@@ -21,6 +21,7 @@ namespace KaggleTitanic
         public float Pclass { get; set; }
 
         [LoadColumn(3)]
+        [Feature]
         public string Name { get; set; }
 
         /// <summary>

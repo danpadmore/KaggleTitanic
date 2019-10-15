@@ -32,8 +32,6 @@ namespace KaggleTitanic
                 var predictions = predictionPipeline.Transform(data);
                 var survivalPredictions = mlContext.Data.CreateEnumerable<SurvivalPrediction>(predictions, reuseRowObject: true);
 
-                survivalPredictions.ToList().ForEach(p => WriteLine(p));
-
                 File.WriteAllLines("submission.csv", 
                     new List<string> {  "PassengerId,Survived" }
                     .Concat(survivalPredictions.Select(p => $"{p.PassengerId},{(p.Survived ? 1 : 0)}")));
@@ -59,8 +57,9 @@ namespace KaggleTitanic
 
             var dataPipeline = mlContext.Transforms.Categorical.OneHotEncoding("SexEncoded", inputColumnName: nameof(TrainingPassenger.Sex))
                 .Append(mlContext.Transforms.Categorical.OneHotEncoding("CabinEncoded", inputColumnName: nameof(TrainingPassenger.Cabin)))
+                .Append(mlContext.Transforms.Text.FeaturizeText("NameFeaturized", nameof(TrainingPassenger.Name)))
                 .Append(mlContext.Transforms.Concatenate("Features",
-                    nameof(TrainingPassenger.Pclass), "SexEncoded", nameof(TrainingPassenger.Age), nameof(TrainingPassenger.SibSp), nameof(TrainingPassenger.Parch), "CabinEncoded"));
+                    "NameFeaturized", nameof(TrainingPassenger.Pclass), "SexEncoded", nameof(TrainingPassenger.Age), nameof(TrainingPassenger.SibSp), nameof(TrainingPassenger.Parch), "CabinEncoded"));
 
             var trainer = mlContext.BinaryClassification.Trainers
                 .SdcaLogisticRegression(labelColumnName: "Label", featureColumnName: "Features");
