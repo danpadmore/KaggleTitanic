@@ -59,9 +59,8 @@ namespace KaggleTitanic
                 .Append(mlContext.Transforms.Categorical.OneHotEncoding("CabinEncoded", inputColumnName: nameof(TrainingPassenger.Cabin)))
                 .Append(mlContext.Transforms.Text.FeaturizeText("NameFeaturized", nameof(TrainingPassenger.Name)))
                 .Append(mlContext.Transforms.Categorical.OneHotEncoding("EmbarkedFeaturized", nameof(TrainingPassenger.Embarked)))
-                .Append(mlContext.Transforms.NormalizeBinning("FareBinned", nameof(TrainingPassenger.Fare)))
                 .Append(mlContext.Transforms.Concatenate("Features",
-                    "NameFeaturized", nameof(TrainingPassenger.Pclass), "SexEncoded", nameof(TrainingPassenger.Age), "FareBinned",
+                    "NameFeaturized", nameof(TrainingPassenger.Pclass), "SexEncoded", nameof(TrainingPassenger.Age),
                     nameof(TrainingPassenger.SibSp), nameof(TrainingPassenger.Parch), "CabinEncoded", "EmbarkedFeaturized"));
 
             var trainer = mlContext.BinaryClassification.Trainers

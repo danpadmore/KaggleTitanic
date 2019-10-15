@@ -53,7 +53,6 @@ namespace KaggleTitanic
         public string Ticket { get; set; }
 
         [LoadColumn(9)]
-        [Feature]
         public float Fare { get; set; }
 
         [LoadColumn(10)]
