@@ -63,6 +63,7 @@ namespace KaggleTitanic
         /// C = Cherbourg, S = Southampton, Q = Queenstown
         /// </summary>
         [LoadColumn(11)]
+        [Feature]
         public string Embarked { get; set; }
     }
 }

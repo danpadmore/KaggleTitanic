@@ -58,8 +58,10 @@ namespace KaggleTitanic
             var dataPipeline = mlContext.Transforms.Categorical.OneHotEncoding("SexEncoded", inputColumnName: nameof(TrainingPassenger.Sex))
                 .Append(mlContext.Transforms.Categorical.OneHotEncoding("CabinEncoded", inputColumnName: nameof(TrainingPassenger.Cabin)))
                 .Append(mlContext.Transforms.Text.FeaturizeText("NameFeaturized", nameof(TrainingPassenger.Name)))
+                .Append(mlContext.Transforms.Categorical.OneHotEncoding("EmbarkedFeaturized", nameof(TrainingPassenger.Embarked)))
                 .Append(mlContext.Transforms.Concatenate("Features",
-                    "NameFeaturized", nameof(TrainingPassenger.Pclass), "SexEncoded", nameof(TrainingPassenger.Age), nameof(TrainingPassenger.SibSp), nameof(TrainingPassenger.Parch), "CabinEncoded"));
+                    "NameFeaturized", nameof(TrainingPassenger.Pclass), "SexEncoded", nameof(TrainingPassenger.Age), 
+                    nameof(TrainingPassenger.SibSp), nameof(TrainingPassenger.Parch), "CabinEncoded", "EmbarkedFeaturized"));
 
             var trainer = mlContext.BinaryClassification.Trainers
                 .SdcaLogisticRegression(labelColumnName: "Label", featureColumnName: "Features");
