@@ -5,7 +5,7 @@ namespace KaggleTitanic
     public class Passenger
     {
         [LoadColumn(0)]
-        public short PassengerId { get; set; }
+        public float PassengerId { get; set; }
 
         /// <summary>
         /// Passenger's class (1st, 2nd, 3rd)
