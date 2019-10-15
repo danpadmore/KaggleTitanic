@@ -1,5 +1,6 @@
 ﻿using Microsoft.ML;
 using Microsoft.ML.Data;
+using Microsoft.ML.Runtime;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,17 +19,18 @@ namespace KaggleTitanic
             {
                 WriteLine("Begin");
 
+                var mlContext = new MLContext();
+                mlContext.ComponentCatalog.RegisterAssembly(typeof(PassengerTitleMappingFactory).Assembly);
+
                 if (ShouldTrain())
                 {
-                    Train();
+                    Train(mlContext);
                 }
 
-                var mlContext = new MLContext();
-                var data = mlContext.Data.LoadFromTextFile<Passenger>(@"data\test.csv",
+                var data = mlContext.Data.LoadFromTextFile<TestPassenger>(@"data\test.csv",
                     separatorChar: ',', hasHeader: true, allowQuoting: true);
 
                 var predictionPipeline = mlContext.Model.Load(TrainedModelFilePath, out DataViewSchema predictionPipelineSchema);
-
                 var predictions = predictionPipeline.Transform(data);
                 var survivalPredictions = mlContext.Data.CreateEnumerable<SurvivalPrediction>(predictions, reuseRowObject: true);
 
@@ -47,21 +49,21 @@ namespace KaggleTitanic
             }
         }
 
-        private static void Train()
+        private static void Train(MLContext mlContext)
         {
-            var mlContext = new MLContext();
-
             var data = mlContext.Data.LoadFromTextFile<TrainingPassenger>(@"data\train.csv",
                 separatorChar: ',', hasHeader: true, allowQuoting: true);
             var splittedData = mlContext.Data.TrainTestSplit(data, testFraction: 0.2);
-
+            
             var dataPipeline = mlContext.Transforms.Categorical.OneHotEncoding("SexEncoded", inputColumnName: nameof(TrainingPassenger.Sex))
                 .Append(mlContext.Transforms.Categorical.OneHotEncoding("CabinEncoded", inputColumnName: nameof(TrainingPassenger.Cabin)))
                 .Append(mlContext.Transforms.Text.FeaturizeText("NameFeaturized", nameof(TrainingPassenger.Name)))
                 .Append(mlContext.Transforms.Categorical.OneHotEncoding("EmbarkedFeaturized", nameof(TrainingPassenger.Embarked)))
+                .Append(mlContext.Transforms.CustomMapping(new PassengerTitleMappingFactory().GetMapping(), contractName: PassengerTitleMappingFactory.ContractName))
+                .Append(mlContext.Transforms.Categorical.OneHotEncoding("TitleEncoded", inputColumnName: nameof(PassengerTitle.Title)))
                 .Append(mlContext.Transforms.Concatenate("Features",
                     "NameFeaturized", nameof(TrainingPassenger.Pclass), "SexEncoded", nameof(TrainingPassenger.Age),
-                    nameof(TrainingPassenger.SibSp), nameof(TrainingPassenger.Parch), "CabinEncoded", "EmbarkedFeaturized"));
+                    nameof(TrainingPassenger.SibSp), nameof(TrainingPassenger.Parch), "CabinEncoded", "EmbarkedFeaturized", "TitleEncoded"));
 
             var trainer = mlContext.BinaryClassification.Trainers
                 .SdcaLogisticRegression(labelColumnName: "Label", featureColumnName: "Features");
@@ -76,7 +78,18 @@ namespace KaggleTitanic
             mlContext.Model.Save(trainedModel, splittedData.TrainSet.Schema, TrainedModelFilePath);
         }
 
-        public static void PrintBinaryClassificationMetrics(string name, CalibratedBinaryClassificationMetrics metrics)
+        private static bool ShouldTrain()
+        {
+            if (!File.Exists(TrainedModelFilePath))
+            {
+                return true;
+            }
+
+            WriteLine("Existing model found, delete and train new model? (Y)es or any key to skip");
+            return (ReadKey().Key == ConsoleKey.Y);
+        }
+
+        private static void PrintBinaryClassificationMetrics(string name, CalibratedBinaryClassificationMetrics metrics)
         {
             WriteLine($"************************************************************");
             WriteLine($"*       Metrics for {name} binary classification model      ");
@@ -92,17 +105,6 @@ namespace KaggleTitanic
             WriteLine($"*       NegativePrecision:  {metrics.NegativePrecision:#.##}");
             WriteLine($"*       NegativeRecall:  {metrics.NegativeRecall:P2}");
             WriteLine($"************************************************************");
-        }   
-
-        private static bool ShouldTrain()
-        {
-            if (!File.Exists(TrainedModelFilePath))
-            {
-                return true;
-            }
-
-            WriteLine("Existing model found, delete and train new model? (Y)es or any key to skip");
-            return (ReadKey().Key == ConsoleKey.Y);
         }
     }
 }

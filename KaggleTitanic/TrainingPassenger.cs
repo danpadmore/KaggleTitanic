@@ -2,7 +2,7 @@
 
 namespace KaggleTitanic
 {
-    public class TrainingPassenger
+    public class TrainingPassenger : PassengerName
     {
         [LoadColumn(0)]
         public float PassengerId { get; set; }
@@ -22,7 +22,7 @@ namespace KaggleTitanic
 
         [LoadColumn(3)]
         [Feature]
-        public string Name { get; set; }
+        public override string Name { get; set; }
 
         /// <summary>
         /// male, female

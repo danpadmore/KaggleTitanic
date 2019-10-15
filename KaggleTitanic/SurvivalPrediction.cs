@@ -2,7 +2,7 @@
 
 namespace KaggleTitanic
 {
-    public class SurvivalPrediction : Passenger
+    public class SurvivalPrediction : TestPassenger
     {
         [ColumnName("PredictedLabel")]
         public bool Survived { get; set; }
