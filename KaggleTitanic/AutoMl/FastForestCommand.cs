@@ -43,7 +43,7 @@ namespace KaggleTitanic.AutoMl
             var trainingPipeline = BuildTrainingPipeline(mlContext);
             var trainedModel = TrainModel(splittedData.TrainSet, trainingPipeline);
 
-            Evaluate(mlContext, splittedData.TrainSet, trainedModel);
+            Evaluate(mlContext, splittedData.TestSet, trainedModel);
 
             mlContext.Model.Save(trainedModel, splittedData.TrainSet.Schema, TrainedModelFilePath);
         }
