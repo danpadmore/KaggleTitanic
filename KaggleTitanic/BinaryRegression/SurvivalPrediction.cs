@@ -1,6 +1,7 @@
-﻿using Microsoft.ML.Data;
+﻿using KaggleTitanic.Model;
+using Microsoft.ML.Data;
 
-namespace KaggleTitanic.Model
+namespace KaggleTitanic.BinaryRegression
 {
     public class SurvivalPrediction : TestPassenger
     {

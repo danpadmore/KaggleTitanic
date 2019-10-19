@@ -1,27 +1,26 @@
 ﻿using KaggleTitanic.Model;
 using Microsoft.ML;
 using Microsoft.ML.Data;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using static System.Console;
 
-namespace KaggleTitanic.BinaryRegression
+namespace KaggleTitanic.BinaryForest
 {
-    public class BinaryRegressionCommand
+    /// <summary>
+    /// https://docs.microsoft.com/en-us/dotnet/api/microsoft.ml.treeextensions.fastforest?view=ml-dotnet#Microsoft_ML_TreeExtensions_FastForest_Microsoft_ML_BinaryClassificationCatalog_BinaryClassificationTrainers_System_String_System_String_System_String_System_Int32_System_Int32_System_Int32_
+    /// </summary>
+    public class BinaryForestCommand
     {
-        private const string TrainedModelFilePath = "binary_regression_trained_model.zip";
+        private const string TrainedModelFilePath = "binary_forest_trained_model.zip";
 
         public static void Execute()
         {
             var mlContext = new MLContext();
             mlContext.ComponentCatalog.RegisterAssembly(typeof(PassengerTitleMappingFactory).Assembly);
 
-            if (ShouldTrain())
-            {
-                Train(mlContext);
-            }
+            Train(mlContext);
 
             var data = mlContext.Data.LoadFromTextFile<TestPassenger>(@"data\test.csv",
                 separatorChar: ',', hasHeader: true, allowQuoting: true);
@@ -30,7 +29,7 @@ namespace KaggleTitanic.BinaryRegression
             var predictions = predictionPipeline.Transform(data);
             var survivalPredictions = mlContext.Data.CreateEnumerable<SurvivalPrediction>(predictions, reuseRowObject: false);
 
-            File.WriteAllLines("regression_submission.csv",
+            File.WriteAllLines("tree_submission.csv",
                 new List<string> { "PassengerId,Survived" }
                 .Concat(survivalPredictions.Select(p => $"{p.PassengerId},{(p.Survived ? 1 : 0)}")));
         }
@@ -51,46 +50,32 @@ namespace KaggleTitanic.BinaryRegression
                     "NameFeaturized", nameof(TrainingPassenger.Pclass), "SexEncoded", nameof(TrainingPassenger.Age),
                     nameof(TrainingPassenger.SibSp), nameof(TrainingPassenger.Parch), "CabinEncoded", "EmbarkedFeaturized", "TitleEncoded"));
 
-            var trainer = mlContext.BinaryClassification.Trainers
-                .SdcaLogisticRegression(labelColumnName: "Label", featureColumnName: "Features");
+            var trainer = mlContext.BinaryClassification.Trainers.FastForest();
             var trainingPipeline = dataPipeline.Append(trainer);
             var trainedModel = trainingPipeline.Fit(splittedData.TrainSet);
 
             var predictions = trainedModel.Transform(splittedData.TestSet);
-            var metrics = mlContext.BinaryClassification.Evaluate(data: predictions,
+            var metrics = mlContext.BinaryClassification.EvaluateNonCalibrated(data: predictions,
                 labelColumnName: "Label", scoreColumnName: "Score");
 
-            PrintBinaryClassificationMetrics(trainer.ToString(), metrics);
+            PrintMetrics(metrics);
             mlContext.Model.Save(trainedModel, splittedData.TrainSet.Schema, TrainedModelFilePath);
         }
 
-        private static bool ShouldTrain()
+        private static void PrintMetrics(BinaryClassificationMetrics metrics)
         {
-            if (!File.Exists(TrainedModelFilePath))
-            {
-                return true;
-            }
+            WriteLine($"Accuracy: {metrics.Accuracy:F2}");
+            WriteLine($"AUC: {metrics.AreaUnderRocCurve:F2}");
+            WriteLine($"F1 Score: {metrics.F1Score:F2}");
+            WriteLine($"Negative Precision: " +
+                $"{metrics.NegativePrecision:F2}");
 
-            WriteLine("Existing model found, delete and train new model? (Y)es or any key to skip");
-            return (ReadKey().Key == ConsoleKey.Y);
-        }
+            WriteLine($"Negative Recall: {metrics.NegativeRecall:F2}");
+            WriteLine($"Positive Precision: " +
+                $"{metrics.PositivePrecision:F2}");
 
-        private static void PrintBinaryClassificationMetrics(string name, CalibratedBinaryClassificationMetrics metrics)
-        {
-            WriteLine($"************************************************************");
-            WriteLine($"*       Metrics for {name} binary classification model      ");
-            WriteLine($"*-----------------------------------------------------------");
-            WriteLine($"*       Accuracy: {metrics.Accuracy:P2}");
-            WriteLine($"*       Area Under Curve:      {metrics.AreaUnderRocCurve:P2}");
-            WriteLine($"*       Area under Precision recall Curve:  {metrics.AreaUnderPrecisionRecallCurve:P2}");
-            WriteLine($"*       F1Score:  {metrics.F1Score:P2}");
-            WriteLine($"*       LogLoss:  {metrics.LogLoss:#.##}");
-            WriteLine($"*       LogLossReduction:  {metrics.LogLossReduction:#.##}");
-            WriteLine($"*       PositivePrecision:  {metrics.PositivePrecision:#.##}");
-            WriteLine($"*       PositiveRecall:  {metrics.PositiveRecall:#.##}");
-            WriteLine($"*       NegativePrecision:  {metrics.NegativePrecision:#.##}");
-            WriteLine($"*       NegativeRecall:  {metrics.NegativeRecall:P2}");
-            WriteLine($"************************************************************");
+            WriteLine($"Positive Recall: {metrics.PositiveRecall:F2}\n");
+            WriteLine(metrics.ConfusionMatrix.GetFormattedConfusionTable());
         }
     }
 }

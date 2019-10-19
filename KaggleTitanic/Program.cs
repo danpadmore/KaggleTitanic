@@ -1,5 +1,4 @@
-﻿using KaggleTitanic.BinaryRegression;
-using System;
+﻿using System;
 using static System.Console;
 
 namespace KaggleTitanic
@@ -13,7 +12,10 @@ namespace KaggleTitanic
             {
                 WriteLine("Begin");
 
-                BinaryRegressionCommand.Execute();
+                // Best score: 0.80382
+                // BinaryRegression.BinaryRegressionCommand.Execute();
+
+                BinaryForest.BinaryForestCommand.Execute();
             }
             catch (Exception ex)
             {
