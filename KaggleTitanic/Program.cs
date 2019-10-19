@@ -22,7 +22,9 @@ namespace KaggleTitanic
                 // BinaryRegression.BinaryRegressionCommand.Execute();
 
                 // Best score: 0.78468
-                BinaryForest.BinaryForestCommand.Execute();
+                // BinaryForest.BinaryForestCommand.Execute();
+
+                AutoMl.FastForestCommand.Execute();
             }
             catch (Exception ex)
             {
