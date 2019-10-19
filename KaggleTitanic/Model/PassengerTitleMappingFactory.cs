@@ -10,6 +10,7 @@ namespace KaggleTitanic.Model
 
         private static void CustomAction(PassengerName input, PassengerTitle output)
         {
+            output.LastName = input.Name.Substring(0, input.Name.IndexOf(','));
             output.Title = DetermineTitle(input.Name);
         }
 
@@ -32,5 +33,6 @@ namespace KaggleTitanic.Model
     public class PassengerTitle
     {
         public string Title { get; set; }
+        public string LastName { get; set; }
     }
 }

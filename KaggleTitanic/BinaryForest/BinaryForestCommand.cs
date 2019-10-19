@@ -41,14 +41,14 @@ namespace KaggleTitanic.BinaryForest
             var splittedData = mlContext.Data.TrainTestSplit(data, testFraction: 0.2);
 
             var dataPipeline = mlContext.Transforms.Categorical.OneHotEncoding("SexEncoded", inputColumnName: nameof(TrainingPassenger.Sex))
-                .Append(mlContext.Transforms.Categorical.OneHotEncoding("CabinEncoded", inputColumnName: nameof(TrainingPassenger.Cabin)))
-                .Append(mlContext.Transforms.Text.FeaturizeText("NameFeaturized", nameof(TrainingPassenger.Name)))
-                .Append(mlContext.Transforms.Categorical.OneHotEncoding("EmbarkedFeaturized", nameof(TrainingPassenger.Embarked)))
+                .Append(mlContext.Transforms.Categorical.OneHotEncoding("EmbarkedEncoded", nameof(TrainingPassenger.Embarked)))
                 .Append(mlContext.Transforms.CustomMapping(new PassengerTitleMappingFactory().GetMapping(), contractName: PassengerTitleMappingFactory.ContractName))
-                .Append(mlContext.Transforms.Categorical.OneHotEncoding("TitleEncoded", inputColumnName: nameof(PassengerTitle.Title)))
+                .Append(mlContext.Transforms.Text.FeaturizeText("TitleFeaturized", inputColumnName: nameof(PassengerTitle.Title)))
+                .Append(mlContext.Transforms.Text.FeaturizeText("LastNameFeaturized", "LastName"))
                 .Append(mlContext.Transforms.Concatenate("Features",
-                    "NameFeaturized", nameof(TrainingPassenger.Pclass), "SexEncoded", nameof(TrainingPassenger.Age),
-                    nameof(TrainingPassenger.SibSp), nameof(TrainingPassenger.Parch), "CabinEncoded", "EmbarkedFeaturized", "TitleEncoded"));
+                    "SexEncoded", nameof(TrainingPassenger.Pclass), nameof(TrainingPassenger.Age),
+                    nameof(TrainingPassenger.SibSp),
+                    "EmbarkedEncoded", "LastNameFeaturized", "TitleFeaturized"));
 
             var trainer = mlContext.BinaryClassification.Trainers.FastForest();
             var trainingPipeline = dataPipeline.Append(trainer);
