@@ -19,7 +19,7 @@ namespace KaggleTitanic.Model
             return CustomAction;
         }
 
-        private static string DetermineTitle(string name)
+        public static string DetermineTitle(string name)
         {
             if (name.Contains("Mr.")) return "Mr.";
             if (name.Contains("Mrs.")) return "Mrs.";
