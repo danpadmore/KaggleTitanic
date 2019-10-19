@@ -1,6 +1,6 @@
 ﻿using Microsoft.ML.Data;
 
-namespace KaggleTitanic
+namespace KaggleTitanic.Model
 {
     public class TrainingPassenger : PassengerName
     {

@@ -1,7 +1,8 @@
 ﻿using System;
+using KaggleTitanic.Model;
 using Microsoft.ML.Transforms;
 
-namespace KaggleTitanic
+namespace KaggleTitanic.BinaryRegression
 {
     [CustomMappingFactoryAttribute(ContractName)]
     public class PassengerTitleMappingFactory : CustomMappingFactory<PassengerName, PassengerTitle>

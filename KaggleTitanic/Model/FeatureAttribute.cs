@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace KaggleTitanic
+namespace KaggleTitanic.Model
 {
     /// <summary>
     /// Marks properties to use as feature
